@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Assignment - Student AI Assistant{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="fas fa-cloud-upload-alt me-2 text-primary"></i>Upload Assignment</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data" id="uploadForm" data-loading>
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="mb-4 text-center p-4 bg-light rounded" id="filePreview" style="cursor: pointer;">
+                        <i class="fas fa-cloud-upload-alt fa-3x text-muted"></i>
+                        <p class="mt-2 text-muted">Drag and drop your file here, or click to browse</p>
+                        <p class="text-muted small">Supported: PDF, TXT, DOCX (max 10MB)</p>
+                        <input type="file" id="fileInput" name="file" accept=".pdf,.txt,.docx" style="display: none;">
+                    </div>
+
+                    <div id="fileSelected" class="d-none mb-3">
+                        <div class="alert alert-success d-flex align-items-center gap-2">
+                            <i class="fas fa-file fa-2x text-primary"></i>
+                            <div>
+                                <strong>File selected:</strong>
+                                <span id="fileName" class="fw-semibold"></span>
+                                <div class="small text-muted mt-1">
+                                    Size: <span id="fileSize"></span>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-outline-danger ms-auto" id="clearFile">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-robot me-2"></i>
+                        <strong>AI Analysis:</strong> After upload, AI will analyze your document and extract:
+                        summary, requirements, difficulty level, and suggested tasks.
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="/documents" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary" id="uploadBtn">
+                            <i class="fas fa-upload me-2"></i> Upload & Analyze
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var fileInput = document.getElementById('fileInput');
+    var filePreview = document.getElementById('filePreview');
+    var fileSelected = document.getElementById('fileSelected');
+    var fileName = document.getElementById('fileName');
+    var fileSize = document.getElementById('fileSize');
+    var clearBtn = document.getElementById('clearFile');
+    var uploadBtn = document.getElementById('uploadBtn');
+    
+    // Click to upload
+    filePreview.addEventListener('click', function() {
+        fileInput.click();
+    });
+    
+    // File selected
+    fileInput.addEventListener('change', function() {
+        if (this.files && this.files[0]) {
+            var file = this.files[0];
+            fileName.textContent = file.name;
+            fileSize.textContent = (file.size / 1024).toFixed(1) + ' KB';
+            filePreview.classList.add('d-none');
+            fileSelected.classList.remove('d-none');
+            uploadBtn.disabled = false;
+        }
+    });
+    
+    // Clear file
+    clearBtn.addEventListener('click', function() {
+        fileInput.value = '';
+        filePreview.classList.remove('d-none');
+        fileSelected.classList.add('d-none');
+        uploadBtn.disabled = true;
+    });
+    
+    // Drag and drop
+    filePreview.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        this.classList.add('border-primary', 'bg-primary bg-opacity-10');
+    });
+    
+    filePreview.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        this.classList.remove('border-primary', 'bg-primary bg-opacity-10');
+    });
+    
+    filePreview.addEventListener('drop', function(e) {
+        e.preventDefault();
+        this.classList.remove('border-primary', 'bg-primary bg-opacity-10');
+        
+        var files = e.dataTransfer.files;
+        if (files && files[0]) {
+            var file = files[0];
+            var validTypes = ['application/pdf', 'text/plain',
+                             'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+            
+            if (validTypes.includes(file.type) || file.name.match(/\.(pdf|txt|docx)$/i)) {
+                if (file.size <= 10 * 1024 * 1024) {
+                    fileInput.files = files;
+                    fileName.textContent = file.name;
+                    fileSize.textContent = (file.size / 1024).toFixed(1) + ' KB';
+                    filePreview.classList.add('d-none');
+                    fileSelected.classList.remove('d-none');
+                    uploadBtn.disabled = false;
+                } else {
+                    alert('File size exceeds 10MB limit.');
+                }
+            } else {
+                alert('Invalid file type. Please upload PDF, TXT, or DOCX files only.');
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

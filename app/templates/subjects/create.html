@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Create Subject - Student AI Assistant{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="fas fa-plus-circle me-2 text-primary"></i>Create New Subject</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Subject Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="name" name="name" required
+                               placeholder="e.g., Database Management Systems"
+                               value="{{ request.form.get('name', '') }}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="3"
+                                  placeholder="Brief description of this subject...">{{ request.form.get('description', '') }}</textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="color" class="form-label">Color</label>
+                        <div class="input-group">
+                            <input type="color" class="form-control form-control-color" id="color" name="color"
+                                   value="{{ request.form.get('color', '#0d6efd') }}" style="max-width: 100px;">
+                            <input type="text" class="form-control" value="{{ request.form.get('color', '#0d6efd') }}"
+                                   readonly title="Color hex value">
+                        </div>
+                        <div class="form-text">Choose a color to represent this subject</div>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="/subjects" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i> Create Subject
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var colorInput = document.getElementById('color');
+    var colorText = colorInput.nextElementSibling;
+    
+    colorInput.addEventListener('input', function() {
+        colorText.value = this.value;
+    });
+});
+</script>
+{% endblock %}

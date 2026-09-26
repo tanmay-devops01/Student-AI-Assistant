@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}{{ subject.name }} - Student AI Assistant{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-2">
+                    <div style="width: 16px; height: 16px; border-radius: 50%; background: {{ subject.color }}"></div>
+                    <h5 class="mb-0">{{ subject.name }}</h5>
+                </div>
+                <div class="btn-group">
+                    <a href="/subjects/{{ subject.id }}/edit" class="btn btn-sm btn-primary">
+                        <i class="fas fa-edit me-1"></i> Edit
+                    </a>
+                    <form method="POST" action="/subjects/{{ subject.id }}/delete" class="d-inline" onsubmit="return confirm('Delete this subject?');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                            <i class="fas fa-trash me-1"></i> Delete
+                        </button>
+                    </form>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if subject.description %}
+                <p class="text-muted mb-4">{{ subject.description }}</p>
+                {% endif %}
+
+                <!-- Subject Stats -->
+                <div class="row g-3 mb-4">
+                    <div class="col-4">
+                        <div class="text-center p-3 bg-light rounded">
+                            <div class="h3 mb-0 text-primary">{{ stats.total_tasks }}</div>
+                            <small class="text-muted">Total Tasks</small>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="text-center p-3 bg-light rounded">
+                            <div class="h3 mb-0 text-success">{{ stats.completed_tasks }}</div>
+                            <small class="text-muted">Completed</small>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="text-center p-3 bg-light rounded">
+                            <div class="h3 mb-0 text-warning">{{ stats.pending_tasks }}</div>
+                            <small class="text-muted">Pending</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>Subject Progress</span>
+                        <span class="badge bg-white text-primary border">{{ stats.completion_percentage|round(1) }}%</span>
+                    </div>
+                    <div class="progress" style="height: 15px;">
+                        <div class="progress-bar" style="width: {{ stats.completion_percentage }}%; background: {{ subject.color }}"></div>
+                    </div>
+                </div>
+
+                <!-- Tasks in this subject -->
+                <h6>Tasks in this Subject</h6>
+                {% if tasks %}
+                <div class="table-responsive mt-3">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Task</th>
+                                <th>Status</th>
+                                <th>Priority</th>
+                                <th>Deadline</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for task in tasks %}
+                            <tr>
+                                <td>
+                                    <a href="/tasks/{{ task.id }}" class="fw-semibold{% if task.status == 'Completed' %} text-decoration-line-through text-muted{% endif %}">
+                                        {{ task.title }}
+                                    </a>
+                                </td>
+                                <td>
+                                    {% set status_class = 'bg-primary' if task.status == 'Pending' else 'bg-info' if task.status == 'In Progress' else 'bg-success' %}
+                                    <span class="badge {{ status_class }} text-white">{{ task.status }}</span>
+                                </td>
+                                <td>
+                                    {% set priority_class = 'bg-danger' if task.priority == 'High' else 'bg-warning' if task.priority == 'Medium' else 'bg-secondary' %}
+                                    <span class="badge {{ priority_class }} text-white">{{ task.priority }}</span>
+                                </td>
+                                <td>
+                                    {% if task.deadline %}
+                                    <span>{{ task.deadline.strftime('%b %d, %Y') }}</span>
+                                    {% else %}
+                                    <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-muted py-3">
+                    <i class="fas fa-inbox fa-2x mb-2"></i>
+                    <p>No tasks in this subject yet.</p>
+                    <a href="/tasks/create?subject_id={{ subject.id }}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-plus me-1"></i> Add Task
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white">
+                <h6>Subject Info</h6>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span class="text-muted">Subject ID</span>
+                        <span>#{{ subject.id }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span class="text-muted">Created</span>
+                        <span>{{ subject.created_at.strftime('%b %d, %Y') }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span class="text-muted">Color</span>
+                        <span style="display: inline-block; width: 20px; height: 20px; border-radius: 4px; background: {{ subject.color }}"></span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,282 @@
+{% extends "base.html" %}
+
+{% block title %}Reports - Student AI Assistant{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+            <h2><i class="fas fa-chart-bar me-2 text-primary"></i>Reports</h2>
+            <div class="btn-group">
+                <a href="/reports/week" class="btn {% if period == 'week' %}btn-primary{% else %}btn-outline-secondary{% endif %}">This Week</a>
+                <a href="/reports/month" class="btn {% if period == 'month' %}btn-primary{% else %}btn-outline-secondary{% endif %}">This Month</a>
+                <a href="/reports/custom" class="btn {% if is_custom %}btn-primary{% else %}btn-outline-secondary{% endif %}">Custom Range</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Period Info -->
+<div class="alert alert-primary bg-opacity-10 mb-4">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h5 class="mb-1">{{ period_name }}</h5>
+            <small class="text-muted">
+                {% if period != 'custom' %}
+                {{ start_date.strftime('%B %d') }} - {{ end_date.strftime('%B %d, %Y') }}
+                {% else %}
+                {{ start_date.strftime('%B %d, %Y') }} - {{ end_date.strftime('%B %d, %Y') }}
+                {% endif %}
+            </small>
+        </div>
+        <div class="text-end">
+            {% if completion_rate >= 80 %}
+            <span class="badge bg-success">Excellent</span>
+            {% elif completion_rate >= 60 %}
+            <span class="badge bg-warning">Good</span>
+            {% elif completion_rate >= 40 %}
+            <span class="badge bg-info">Getting There</span>
+            {% else %}
+            <span class="badge bg-secondary">Keep Going</span>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="card stat-card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="text-muted small text-uppercase fw-bold">Completed</div>
+                        <div class="h3 mb-0 text-success">{{ tasks_completed_count }}</div>
+                    </div>
+                    <div class="card-icon icon-success">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card stat-card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="text-muted small text-uppercase fw-bold">Created</div>
+                        <div class="h3 mb-0 text-primary">{{ tasks_created_count }}</div>
+                    </div>
+                    <div class="card-icon icon-primary">
+                        <i class="fas fa-plus-circle"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card stat-card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="text-muted small text-uppercase fw-bold">Overdue</div>
+                        <div class="h3 mb-0 text-danger">{{ tasks_overdue_count }}</div>
+                    </div>
+                    <div class="card-icon icon-danger">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card stat-card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="text-muted small text-uppercase fw-bold">Completion Rate</div>
+                        <div class="h3 mb-0 text-primary">{{ completion_rate|round(1) }}%</div>
+                    </div>
+                    <div class="card-icon icon-info">
+                        <i class="fas fa-percentage"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Subject Progress Chart -->
+{% if subject_progress %}
+<div class="row g-4 mb-4">
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="fas fa-book me-2 text-primary"></i>Subject Progress</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Subject</th>
+                                <th>Progress</th>
+                                <th>Completed</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for subject in subject_progress|sort(attribute='percentage', reverse=True) %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div style="width: 12px; height: 12px; border-radius: 50%; background: {{ subject.color }}"></div>
+                                        <span class="fw-semibold">{{ subject.name }}</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="progress flex-grow-1" style="height: 10px; max-width: 150px;">
+                                            <div class="progress-bar" style="width: {{ subject.percentage }}%; background: {{ subject.color }}"></div>
+                                        </div>
+                                        <span class="text-muted small">{{ subject.percentage|round(0) }}%</span>
+                                    </div>
+                                </td>
+                                <td>{{ subject.completed }}</td>
+                                <td>{{ subject.total }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="fas fa-chart-pie me-2 text-primary"></i>Completion Distribution</h5>
+            </div>
+            <div class="card-body">
+                <div class="chart-container" style="height: 250px;">
+                    <canvas id="completionChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Overall Stats -->
+<div class="row g-4 mb-4">
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="text-muted mb-1">Total Tasks</h6>
+                        <h3 class="text-primary mb-0">{{ total_tasks }}</h3>
+                    </div>
+                    <div>
+                        <h6 class="text-muted mb-1">Completed</h6>
+                        <h3 class="text-success mb-0">{{ completed_tasks }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <h6 class="text-muted mb-3">Overall Progress</h6>
+                <div class="progress mb-3" style="height: 25px;">
+                    <div class="progress-bar bg-primary" style="width: {{ completion_rate }}%"></div>
+                </div>
+                <div class="d-flex justify-content-between text-muted">
+                    <span>{{ completed_tasks }} of {{ total_tasks }} tasks</span>
+                    <span>{{ completion_rate|round(1) }}%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Insights and Recommendations -->
+{% if insights or recommendations %}
+<div class="row g-4">
+    {% if insights %}
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="fas fa-lightbulb me-2 text-warning"></i>Insights</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    {% for insight in insights %}
+                    <li class="list-group-item d-flex align-items-start gap-2">
+                        <i class="fas fa-circle-info text-primary mt-1"></i>
+                        <span>{{ insight }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    {% if recommendations %}
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="fas fa-star me-2 text-warning"></i>Recommendations</h5>
+            </div>
+            <div class="card-body">
+                <small class="text-muted d-block mb-2">Suggested next steps based on your task progress</small>
+                <ol class="list-group list-group-numbered">
+                    {% for rec in recommendations %}
+                    <li class="list-group-item d-flex align-items-start gap-2">
+                        <i class="fas fa-check-circle text-success mt-1"></i>
+                        <span>{{ rec }}</span>
+                    </li>
+                    {% endfor %}
+                </ol>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var ctx = document.getElementById('completionChart');
+    if (ctx && {{ subject_progress|length > 0 }}) {
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: {{ subject_progress | map(attribute='name') | list | tojson }},
+                datasets: [{
+                    data: {{ subject_progress | map(attribute='percentage') | list | tojson }},
+                    backgroundColor: {{ subject_progress | map(attribute='color') | list | tojson }},
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                },
+                cutout: '70%'
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

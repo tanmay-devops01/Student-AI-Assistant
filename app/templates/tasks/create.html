@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}Create Task - Student AI Assistant{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="fas fa-plus-circle me-2 text-primary"></i>Create New Task</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Task Title <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="title" name="title" required
+                               placeholder="e.g., Complete DBMS Assignment" value="{{ request.form.get('title', '') }}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="3"
+                                  placeholder="Add details about this task...">{{ request.form.get('description', '') }}</textarea>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="subject_id" class="form-label">Subject</label>
+                            <select class="form-select" id="subject_id" name="subject_id">
+                                <option value="">No Subject</option>
+                                {% for subject in subjects %}
+                                <option value="{{ subject.id }}" {% if request.form.get('subject_id')|string == subject.id|string %}selected{% endif %}>
+                                    {{ subject.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">Optional - assign to a subject</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="priority" class="form-label">Priority</label>
+                            <select class="form-select" id="priority" name="priority">
+                                <option value="Low">Low</option>
+                                <option value="Medium" {% if request.form.get('priority') == 'Medium' or not request.form.get('priority') %}selected{% endif %}>Medium</option>
+                                <option value="High">High</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="status" class="form-label">Status</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="Pending">Pending</option>
+                                <option value="In Progress">In Progress</option>
+                                <option value="Completed">Completed</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="deadline" class="form-label">Deadline</label>
+                            <input type="datetime-local" class="form-control" id="deadline" name="deadline"
+                                   value="{{ request.form.get('deadline', '') }}">
+                            <div class="form-text">Choose the date and time this task is due.</div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="estimated_minutes" class="form-label">Estimated Duration (minutes)</label>
+                        <input type="number" class="form-control" id="estimated_minutes" name="estimated_minutes" min="1"
+                               placeholder="e.g., 120" value="{{ request.form.get('estimated_minutes', '') }}">
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="/tasks" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i> Create Task
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+
+{% block title %}Document Analysis - Student AI Assistant{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="fas fa-file-pdf text-danger fa-lg"></i>
+                    <h5 class="mb-0">{{ document.original_filename }}</h5>
+                </div>
+                <a href="/documents" class="btn btn-sm btn-link"><i class="fas fa-arrow-left"></i> Back</a>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="p-3 bg-light rounded">
+                            <small class="text-muted d-block">Uploaded</small>
+                            <strong>{{ document.uploaded_at.strftime('%B %d, %Y at %I:%M %p') }}</strong>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="p-3 bg-light rounded">
+                            <small class="text-muted d-block">Status</small>
+                            {% if document.summary %}
+                            <span class="badge bg-success text-white d-inline-flex align-items-center gap-1">
+                                <i class="fas fa-check-circle"></i> Analyzed
+                            </span>
+                            {% else %}
+                            <span class="badge bg-secondary d-inline-flex align-items-center gap-1">
+                                <i class="fas fa-hourglass-half"></i> Pending
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                {% if analysis %}
+                <h5 class="mt-4 mb-3"><i class="fas fa-brain me-2 text-primary"></i>AI Analysis Results</h5>
+
+                {% if analysis.summary %}
+                <div class="mb-4">
+                    <h6 class="text-muted mb-2"><i class="fas fa-align-left me-2"></i>Summary</h6>
+                    <p class="card-text">{{ analysis.summary }}</p>
+                </div>
+                {% endif %}
+
+                {% if analysis.requirements %}
+                <div class="mb-4">
+                    <h6 class="text-muted mb-2"><i class="fas fa-list-check me-2"></i>Requirements</h6>
+                    <ul class="list-group list-group-flush">
+                        {% for req in analysis.requirements %}
+                        <li class="list-group-item d-flex align-items-center gap-2">
+                            <i class="fas fa-circle-check text-success"></i>
+                            {{ req }}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+
+                <div class="row g-3 mb-4">
+                    <div class="col-6">
+                        <div class="p-3 bg-light rounded text-center">
+                            <small class="text-muted d-block">Difficulty</small>
+                            <div class="h4 mb-0">
+                                <span class="badge bg-{{ 'success' if analysis.difficulty|lower == 'easy' else 'warning' if analysis.difficulty|lower == 'medium' else 'danger' }} text-white">
+                                    {{ analysis.difficulty|capitalize }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-3 bg-light rounded text-center">
+                            <small class="text-muted d-block">Est. Time</small>
+                            <div class="h4 mb-0">
+                                {% if analysis.estimated_minutes %}
+                                {{ analysis.estimated_minutes }} minutes
+                                {% else %}
+                                <span class="text-muted">Not estimated</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {% if recommendations %}
+                <div class="mb-4">
+                    <h6 class="text-muted mb-2"><i class="fas fa-lightbulb me-2"></i>Recommendations</h6>
+                    <ul class="list-group list-group-flush">
+                        {% for rec in recommendations %}
+                        <li class="list-group-item d-flex align-items-start gap-2">
+                            <i class="fas fa-star text-warning mt-1"></i>
+                            <span>{{ rec }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+
+                {% if suggested_tasks %}
+                <div class="mb-4">
+                    <h6 class="text-muted mb-2"><i class="fas fa-tasks me-2"></i>Suggested Tasks</h6>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Suggested Task</th>
+                                    <th>Priority</th>
+                                    <th>Est. Time</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for task in suggested_tasks %}
+                                <tr>
+                                    <td>{{ task.title }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ 'danger' if task.priority == 'high' else 'warning' if task.priority == 'medium' else 'secondary' }} text-white">
+                                            {{ task.priority|capitalize }}
+                                        </span>
+                                    </td>
+                                    <td>{{ task.estimated_minutes }} min</td>
+                                    <td>
+                                        <form method="POST" action="/documents/{{ document.id }}/create-tasks">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <input type="hidden" name="suggested_tasks" value="{{ task | tojson | forceescape }}">
+                                            <button class="btn btn-sm btn-outline-primary" type="submit">
+                                                <i class="fas fa-plus me-1"></i> Create
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                    <a href="/documents" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-1"></i> Back to Documents
+                    </a>
+                    <a href="/documents/{{ document.id }}/download" class="btn btn-outline-dark">
+                        <i class="fas fa-download me-1"></i> Download Original
+                    </a>
+                </div>
+                {% else %}
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    No AI analysis available. The document may not have extractable text, or AI service is not configured.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

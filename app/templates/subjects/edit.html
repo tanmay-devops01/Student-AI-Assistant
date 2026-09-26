@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Subject - Student AI Assistant{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="fas fa-edit me-2 text-primary"></i>Edit Subject</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Subject Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="name" name="name" required
+                               value="{{ subject.name }}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="3">{{ subject.description or '' }}</textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="color" class="form-label">Color</label>
+                        <div class="input-group">
+                            <input type="color" class="form-control form-control-color" id="color" name="color"
+                                   value="{{ subject.color }}" style="max-width: 100px;">
+                            <input type="text" class="form-control" value="{{ subject.color }}"
+                                   readonly title="Color hex value">
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="/subjects/{{ subject.id }}" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i> Update Subject
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var colorInput = document.getElementById('color');
+    var colorText = colorInput.nextElementSibling;
+    
+    colorText.value = colorInput.value;
+    
+    colorInput.addEventListener('input', function() {
+        colorText.value = this.value;
+    });
+});
+</script>
+{% endblock %}

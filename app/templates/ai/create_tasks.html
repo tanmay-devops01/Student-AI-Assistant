@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Create Tasks with AI - Student AI Assistant{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="fas fa-wand-magic-sparkles me-2 text-success"></i>Create Tasks with AI</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" id="createTasksForm" data-loading>
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="mb-3">
+                        <label for="user_input" class="form-label">Describe Your Tasks</label>
+                        <textarea class="form-control" id="user_input" name="user_input" rows="4" required
+                                  placeholder="e.g., I have a DBMS assignment due Friday and a Python test next Monday.">{{ request.form.get('user_input', '') }}</textarea>
+                        <div class="form-text">
+                            Describe your tasks naturally. Include subjects, deadlines, and priority when possible.
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-lightbulb me-2"></i>
+                        <strong>Example:</strong> "I need to complete my DBMS lab report by Thursday, study for the Physics quiz next week, and finish the Python programming assignment due in 2 weeks."
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="/ai" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-success" id="extractBtn">
+                            <i class="fas fa-robot me-2"></i> Extract Tasks
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if ai_available == false %}
+<div class="alert alert-warning mt-4">
+    <i class="fas fa-exclamation-triangle me-2"></i>
+    AI service is not configured. Please set <code>AI_API_KEY</code> in your <code>.env</code> file.
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var form = document.getElementById('createTasksForm');
+    var btn = document.getElementById('extractBtn');
+    
+    form.addEventListener('submit', function() {
+        btn.disabled = true;
+        btn.innerHTML = '<span class="loading-spinner me-2"></span>Extracting...';
+    });
+});
+</script>
+{% endblock %}

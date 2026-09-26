@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block title %}{{ task.title }} - Student AI Assistant{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <span class="{% if task.status == 'Completed' %}text-decoration-line-through text-muted{% endif %}">
+                        {{ task.title }}
+                    </span>
+                </h5>
+                <div class="btn-group">
+                    {% if task.status != 'Completed' %}
+                    <form method="POST" action="/tasks/{{ task.id }}/toggle" class="d-inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-sm btn-success">
+                            <i class="fas fa-check me-1"></i> Mark Complete
+                        </button>
+                    </form>
+                    {% else %}
+                    <form method="POST" action="/tasks/{{ task.id }}/toggle" class="d-inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-sm btn-outline-warning">
+                            <i class="fas fa-undo me-1"></i> Reopen
+                        </button>
+                    </form>
+                    {% endif %}
+                    <a href="/tasks/{{ task.id }}/edit" class="btn btn-sm btn-primary">
+                        <i class="fas fa-edit me-1"></i> Edit
+                    </a>
+                    <form method="POST" action="/tasks/{{ task.id }}/delete" class="d-inline" onsubmit="return confirm('Delete this task?');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                            <i class="fas fa-trash me-1"></i> Delete
+                        </button>
+                    </form>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="badge bg-{{ 'primary' if task.status == 'Pending' else 'info' if task.status == 'In Progress' else 'success' }} text-white mb-2">
+                            {{ task.status }}
+                        </div>
+                        <div class="badge bg-{{ 'danger' if task.priority == 'High' else 'warning' if task.priority == 'Medium' else 'secondary' }} text-white">
+                            {{ task.priority }} Priority
+                        </div>
+                    </div>
+                    <div class="col-md-6 text-md-end">
+                        {% if task.deadline %}
+                        <div class="d-inline-block p-2 bg-{{ 'danger' if task.is_overdue() else 'warning' if task.is_upcoming_soon(24) else 'light' }} text-{{ 'danger' if task.is_overdue() else 'dark' }} rounded">
+                            <small class="d-block text-uppercase">Deadline</small>
+                            {{ task.deadline.strftime('%B %d, %Y at %I:%M %p') }}
+                            {% if task.is_overdue() %}
+                            <i class="fas fa-exclamation-triangle ms-1"></i> Overdue!
+                            {% endif %}
+                        </div>
+                        {% else %}
+                        <span class="text-muted">No deadline set</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if task.description %}
+                <div class="mb-4">
+                    <h6 class="text-muted mb-2">Description</h6>
+                    <p>{{ task.description }}</p>
+                </div>
+                {% endif %}
+
+                <div class="row g-3 text-muted">
+                    <div class="col-sm-4">
+                        <small class="d-block">Created</small>
+                        <strong>{{ task.created_at.strftime('%B %d, %Y at %I:%M %p') }}</strong>
+                    </div>
+                    <div class="col-sm-4">
+                        <small class="d-block">Subject</small>
+                        {% if task.subject %}
+                        <span class="subject-badge" style="background: {{ task.subject.color }}20; color: {{ task.subject.color }}">
+                            {{ task.subject.name }}
+                        </span>
+                        {% else %}
+                        <span class="text-muted">No subject</span>
+                        {% endif %}
+                    </div>
+                    <div class="col-sm-4">
+                        <small class="d-block">Estimated Time</small>
+                        <strong>{{ task.estimated_minutes or 'Not set' }} minutes</strong>
+                    </div>
+                    {% if task.completed_at %}
+                    <div class="col-sm-4">
+                        <small class="d-block text-success">Completed</small>
+                        <strong>{{ task.completed_at.strftime('%B %d, %Y at %I:%M %p') }}</strong>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white">
+                <h6 class="mb-0"><i class="fas fa-clock me-2"></i>Quick Info</h6>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span class="text-muted">Task ID</span>
+                        <span>#{{ task.id }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span class="text-muted">Progress</span>
+                        <span>
+                            {% if task.status == 'Completed' %}
+                            <span class="text-success">Complete</span>
+                            {% elif task.status == 'In Progress' %}
+                            <span class="text-warning">In Progress</span>
+                            {% else %}
+                            <span class="text-secondary">Not Started</span>
+                            {% endif %}
+                        </span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span class="text-muted">Time Estimate</span>
+                        <span>{{ task.estimated_minutes or '-' }} min</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

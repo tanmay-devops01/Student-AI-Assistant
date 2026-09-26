@@ -1,0 +1,350 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Student AI Assistant{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-tachometer-alt me-2 text-primary"></i>Dashboard</h2>
+            <a href="/tasks/create" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i> New Task
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Welcome Message -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                <div class="d-flex justify-content-between align-items-center flex-wrap">
+                    <div>
+                        <h4 class="mb-1">Welcome back, {{ current_user.name }}!</h4>
+                        <p class="mb-0">Here's your study overview for today.</p>
+                    </div>
+                    <div class="text-end">
+                        <div class="text-white-50 small">Today</div>
+                        <div class="h4 mb-0">{{ now.strftime('%B %d, %Y') }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="card stat-card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="text-muted small text-uppercase fw-bold">Total Tasks</div>
+                        <div class="h4 mb-0">{{ total_tasks }}</div>
+                    </div>
+                    <div class="card-icon icon-primary">
+                        <i class="fas fa-clipboard-list"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card stat-card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="text-muted small text-uppercase fw-bold">Completed</div>
+                        <div class="h4 mb-0 text-success">{{ completed_tasks }}</div>
+                    </div>
+                    <div class="card-icon icon-success">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card stat-card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="text-muted small text-uppercase fw-bold">Pending</div>
+                        <div class="h4 mb-0 text-warning">{{ pending_tasks }}</div>
+                    </div>
+                    <div class="card-icon icon-warning">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card stat-card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="text-muted small text-uppercase fw-bold">Overdue</div>
+                        <div class="h4 mb-0 text-danger">{{ overdue_tasks }}</div>
+                    </div>
+                    <div class="card-icon icon-danger">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Progress and Today's Tasks -->
+<div class="row g-4 mb-4">
+    <!-- Overall Progress -->
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-chart-pie me-2 text-primary"></i>Overall Progress</h5>
+                <span class="badge bg-primary rounded-pill">{{ completion_percentage|round(1) }}%</span>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="progress mb-2" style="height: 25px;">
+                        <div class="progress-bar bg-primary" role="progressbar" 
+                             style="width: {{ completion_percentage }}%" 
+                             aria-valuenow="{{ completion_percentage }}" 
+                             aria-valuemin="0" aria-valuemax="100">
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between text-muted">
+                        <span>{{ completed_tasks }} completed</span>
+                        <span>{{ total_tasks }} total</span>
+                    </div>
+                </div>
+                {% if ai_available %}
+                <div class="text-center">
+                    <a href="/ai/study-plan" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fas fa-robot me-1"></i> Generate Study Plan
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Today's Tasks -->
+    <div class="col-lg-8">
+        <div class="card h-100">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-calendar-day me-2 text-primary"></i>Today's Tasks</h5>
+                <span class="badge bg-white text-primary border">{{ today_completed }}/{{ today_task_count }}</span>
+            </div>
+            <div class="card-body p-0">
+                {% if today_tasks %}
+                <div class="list-group list-group-flush">
+                    {% for task in today_tasks %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center py-3{% if task.status == 'Completed' %} bg-light{% endif %}">
+                        <div class="d-flex align-items-center gap-3">
+                            {% if task.status == 'Completed' %}
+                            <input type="checkbox" checked disabled class="form-check-input mt-0">
+                            {% else %}
+                            <form method="POST" action="/tasks/{{ task.id }}/toggle" class="d-inline-flex">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="form-check-input mt-0 task-toggle" aria-label="Mark {{ task.title }} complete"></button>
+                            </form>
+                            {% endif %}
+                            <div>
+                                <div class="fw-semibold{% if task.status == 'Completed' %} text-decoration-line-through text-muted{% endif %}">
+                                    {{ task.title }}
+                                </div>
+                                <small class="text-muted">
+                                    {% if task.subject %}
+                                    <span class="subject-badge" style="background: {{ task.subject.color }}20; color: {{ task.subject.color }}">
+                                        {{ task.subject.name }}
+                                    </span>
+                                    {% endif %}
+                                </small>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            {% if task.deadline %}
+                            <span class="badge {% if task.is_overdue() %}bg-danger{% elif task.is_upcoming_soon(24) %}bg-warning{% else %}bg-light text-dark{% endif %}">
+                                {{ task.deadline.strftime('%b %d') if task.deadline else '' }}
+                            </span>
+                            {% endif %}
+                            <span class="badge bg-{{ 'success' if task.priority == 'High' else 'warning' if task.priority == 'Medium' else 'secondary' }} text-white ms-2">
+                                {{ task.priority }}
+                            </span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty-state py-4">
+                    <i class="fas fa-calendar-check"></i>
+                    <p class="text-muted mb-0">No tasks scheduled for today.</p>
+                </div>
+                {% endif %}
+            </div>
+            <div class="card-footer bg-white d-flex justify-content-between align-items-center">
+                <a href="/tasks?status=Pending" class="btn btn-sm btn-outline-primary">View All Tasks</a>
+                <a href="/tasks/create" class="btn btn-sm btn-primary">
+                    <i class="fas fa-plus"></i> Add Task
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Upcoming Deadlines and Subject Progress -->
+<div class="row g-4 mb-4">
+    <!-- Upcoming Deadlines -->
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="fas fa-clock me-2 text-warning"></i>Upcoming Deadlines</h5>
+            </div>
+            <div class="card-body p-0">
+                {% if upcoming_deadlines %}
+                <div class="list-group list-group-flush">
+                    {% for task in upcoming_deadlines %}
+                    <a href="/tasks/{{ task.id }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="icon-circle bg-warning bg-opacity-10 text-warning" style="width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-hourglass-half"></i>
+                            </div>
+                            <div>
+                                <div class="fw-semibold">{{ task.title }}</div>
+                                {% if task.subject %}
+                                <small class="text-muted">{{ task.subject.name }}</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge bg-{{ 'danger' if task.is_overdue() else 'warning' if task.is_upcoming_soon(24) else 'light text-dark' }}">
+                                {{ task.deadline.strftime('%b %d, %H:%M') if task.deadline else '' }}
+                            </span>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty-state py-4">
+                    <i class="fas fa-calendar-alt"></i>
+                    <p class="text-muted mb-0">No upcoming deadlines.</p>
+                </div>
+                {% endif %}
+            </div>
+            <div class="card-footer bg-white text-center">
+                <a href="/tasks?filter=deadline" class="btn btn-sm btn-outline-secondary w-100">
+                    View All Deadlines
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Subject Progress -->
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-book me-2 text-primary"></i>Subject Progress</h5>
+                <a href="/subjects" class="btn btn-sm btn-link">View All</a>
+            </div>
+            <div class="card-body">
+                {% if subject_progress %}
+                {% for subject in subject_progress %}
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="subject-badge" style="background: {{ subject.color }}20; color: {{ subject.color }}">
+                                {{ subject.name }}
+                            </span>
+                        </div>
+                        <span class="small text-muted">{{ subject.completed }}/{{ subject.total }}</span>
+                    </div>
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar" role="progressbar" 
+                             style="width: {{ subject.percentage }}%; background: {{ subject.color }}"
+                             aria-valuenow="{{ subject.percentage }}" 
+                             aria-valuemin="0" aria-valuemax="100">
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div class="empty-state py-3">
+                    <i class="fas fa-book-open text-muted"></i>
+                    <p class="text-muted mb-0">No subjects yet. <a href="/subjects/create">Add one</a></p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Activity Chart -->
+<div class="row g-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-chart-bar me-2 text-primary"></i>Weekly Activity</h5>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="activityChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Activity Chart
+    var ctx = document.getElementById('activityChart');
+    if (ctx) {
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: {{ weekly_data | map(attribute='day') | list | tojson }},
+                datasets: [
+                    {
+                        label: 'Tasks Created',
+                        data: {{ weekly_data | map(attribute='created') | list | tojson }},
+                        backgroundColor: 'rgba(13, 110, 253, 0.7)',
+                        borderColor: '#0d6efd',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Tasks Completed',
+                        data: {{ weekly_data | map(attribute='completed') | list | tojson }},
+                        backgroundColor: 'rgba(25, 135, 84, 0.7)',
+                        borderColor: '#198754',
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        }
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Generate Study Plan - Student AI Assistant{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="fas fa-calendar-plus me-2 text-primary"></i>Generate Study Plan</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" id="studyPlanForm" data-loading>
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="mb-3">
+                        <label for="user_input" class="form-label">Describe Your Study Needs</label>
+                        <textarea class="form-control" id="user_input" name="user_input" rows="5" required
+                                  placeholder="e.g., I have a DBMS exam next Monday and a Python assignment due Friday. I have 3 hours available every day.">{{ request.form.get('user_input', '') }}</textarea>
+                        <div class="form-text">
+                            Be specific about deadlines, subjects, and available time. The more details you provide, the better the plan.
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-lightbulb me-2"></i>
+                        <strong>Example:</strong> "I have 3 exams next week: Math on Wednesday, Physics on Thursday, and Computer Science on Friday. I can study 4 hours each day."
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="/ai" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary" id="generateBtn">
+                            <i class="fas fa-robot me-2"></i> Generate Study Plan
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if ai_available == false %}
+<div class="alert alert-warning mt-4">
+    <i class="fas fa-exclamation-triangle me-2"></i>
+    AI service is not configured. Please set <code>AI_API_KEY</code> in your <code>.env</code> file.
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var form = document.getElementById('studyPlanForm');
+    var btn = document.getElementById('generateBtn');
+    
+    form.addEventListener('submit', function() {
+        btn.disabled = true;
+        btn.innerHTML = '<span class="loading-spinner me-2"></span>Generating...';
+    });
+});
+</script>
+{% endblock %}

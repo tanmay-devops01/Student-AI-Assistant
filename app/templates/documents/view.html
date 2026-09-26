@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}{{ document.original_filename }} - Student AI Assistant{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="fas fa-file-pdf text-danger fa-lg"></i>
+                    <h5 class="mb-0">{{ document.original_filename }}</h5>
+                </div>
+                <div class="btn-group">
+                    <a href="/documents/{{ document.id }}/download" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-download me-1"></i> Download
+                    </a>
+                    <form method="POST" action="/documents/{{ document.id }}/delete" class="d-inline" onsubmit="return confirm('Delete this document and its file?');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                            <i class="fas fa-trash me-1"></i> Delete
+                        </button>
+                    </form>
+                    <a href="/documents" class="btn btn-sm btn-link"><i class="fas fa-arrow-left"></i> Back</a>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="p-3 bg-light rounded">
+                            <small class="text-muted d-block">Document ID</small>
+                            <strong>#{{ document.id }}</strong>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="p-3 bg-light rounded">
+                            <small class="text-muted d-block">Uploaded</small>
+                            <strong>{{ document.uploaded_at.strftime('%B %d, %Y at %I:%M %p') }}</strong>
+                        </div>
+                    </div>
+                </div>
+
+                {% if document.extracted_text %}
+                <div class="mb-4">
+                    <h6 class="text-muted mb-2"><i class="fas fa-file-lines me-2"></i>Extracted Text (first 2000 chars)</h6>
+                    <div class="bg-light p-3 rounded" style="max-height: 300px; overflow-y: auto;">
+                        <pre class="text-muted small mb-0">{{ document.extracted_text[:2000] }}</pre>
+                        {% if document.extracted_text|length > 2000 %}
+                        <p class="text-muted small mt-2">... (truncated, {{ document.extracted_text|length }} total characters)</p>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if document.summary %}
+                <div class="alert alert-info">
+                    <h6 class="text-muted mb-2"><i class="fas fa-robot me-2"></i>AI Summary</h6>
+                    <p class="mb-0">{{ document.summary }}</p>
+                </div>
+                {% endif %}
+
+                {% if document.difficulty or document.estimated_minutes %}
+                <div class="row g-3 mt-3">
+                    {% if document.difficulty %}
+                    <div class="col-6">
+                        <div class="p-3 bg-light rounded text-center">
+                            <small class="text-muted d-block">Difficulty</small>
+                            <span class="badge bg-{{ 'success' if document.difficulty == 'easy' else 'warning' if document.difficulty == 'medium' else 'danger' }} text-white">
+                                {{ document.difficulty|capitalize }}
+                            </span>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% if document.estimated_minutes %}
+                    <div class="col-6">
+                        <div class="p-3 bg-light rounded text-center">
+                            <small class="text-muted d-block">Est. Time</small>
+                            <div class="h5 mb-0">{{ document.estimated_minutes }} minutes</div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

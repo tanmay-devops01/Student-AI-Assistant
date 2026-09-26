@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}Tasks Extracted - Student AI Assistant{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-check-circle text-success me-2"></i>Tasks Extracted
+                </h5>
+                <span class="badge bg-success">{{ tasks|length }} task(s) found</span>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-4">
+                    Based on your input: <em>"{{ user_input }}"</em>
+                </p>
+
+                {% if tasks %}
+                <form method="POST" action="/ai/tasks/confirm">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="tasks_data" value="{{ tasks | tojson }}">
+                    
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>Task</th>
+                                    <th>Subject</th>
+                                    <th>Priority</th>
+                                    <th>Deadline</th>
+                                    <th>Est. Time</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for task in tasks %}
+                                {% set task_id = loop.index %}
+                                <tr class="task-row">
+                                    <td>
+                                        <div class="form-check">
+                                            <input type="checkbox" class="form-check-input task-select"
+                                                   name="include_task" value="{{ task_id }}" checked
+                                                   onchange="toggleTaskRow(this)">
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="input-group">
+                                            <input type="text" class="form-control form-control-sm"
+                                                   name="edit_title_{{ task_id }}"
+                                                   value="{{ task.title }}"
+                                                   placeholder="Task title">
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <input type="text" class="form-control form-control-sm"
+                                               name="edit_subject_{{ task_id }}"
+                                               value="{{ task.subject }}"
+                                               placeholder="Subject">
+                                    </td>
+                                    <td>
+                                        <select class="form-select form-select-sm" name="edit_priority_{{ task_id }}">
+                                            <option value="low" {% if task.priority == 'low' %}selected{% endif %}>Low</option>
+                                            <option value="medium" {% if task.priority == 'medium' %}selected{% endif %}>Medium</option>
+                                            <option value="high" {% if task.priority == 'high' %}selected{% endif %}>High</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <input type="date" class="form-control form-control-sm"
+                                               name="edit_deadline_{{ task_id }}"
+                                               value="{{ task.deadline or '' }}">
+                                    </td>
+                                    <td>
+                                        <input type="number" class="form-control form-control-sm"
+                                               name="edit_minutes_{{ task_id }}"
+                                               value="{{ task.estimated_minutes or 60 }}"
+                                               min="1">
+                                        <small class="text-muted">min</small>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="alert alert-info mt-3">
+                        <i class="fas fa-info-circle me-2"></i>
+                        You can edit any field before confirming. Uncheck a task to skip it.
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                        <a href="/ai/create-tasks" class="btn btn-secondary">
+                            <i class="fas fa-rotate-left me-2"></i> Try Again
+                        </a>
+                        <button type="submit" name="action" value="cancel" class="btn btn-outline-secondary">
+                            Cancel
+                        </button>
+                        <button type="submit" name="action" value="accept" class="btn btn-success">
+                            <i class="fas fa-check-double me-2"></i> Accept All & Create Tasks
+                        </button>
+                    </div>
+                </form>
+                {% else %}
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    No tasks could be extracted. Please try a different description.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    window.toggleTaskRow = function(checkbox) {
+        var row = checkbox.closest('.task-row');
+        var inputs = row.querySelectorAll('input:not([type="checkbox"]), select');
+        inputs.forEach(function(input) {
+            input.disabled = !checkbox.checked;
+        });
+        row.style.opacity = checkbox.checked ? '1' : '0.5';
+    };
+});
+</script>
+{% endblock %}

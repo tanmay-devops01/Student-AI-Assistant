@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}Study Plan Generated - Student AI Assistant{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-check-circle text-success me-2"></i>Study Plan Generated
+                </h5>
+                <span class="badge bg-{{ 'success' if confidence == 'high' else 'warning' if confidence == 'medium' else 'secondary' }}">
+                    Confidence: {{ confidence }}
+                </span>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-4">
+                    Based on your request: <em>"{{ user_input }}"</em>
+                </p>
+
+                {% if plan and plan.days %}
+                <h5 class="mb-3"><i class="fas fa-list me-2 text-primary"></i>Study Schedule</h5>
+                
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Day</th>
+                                <th>Activity</th>
+                                <th>Subject</th>
+                                <th>Duration</th>
+                                <th>Focus</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for day in plan.days %}
+                            {% for activity in day.activities %}
+                            <tr>
+                                <td>
+                                    <span class="fw-semibold">{{ day.day }}</span>
+                                </td>
+                                <td>{{ activity.task }}</td>
+                                <td>
+                                    {% if activity.subject %}
+                                    <span class="subject-badge" style="background: #e7f3ff; color: #0d6efd;">
+                                        {{ activity.subject }}
+                                    </span>
+                                    {% else %}
+                                    <span class="text-muted">General</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if activity.duration_minutes %}
+                                    {{ activity.duration_minutes }} min
+                                    {% else %}
+                                    -
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge bg-{{ 'info' if activity.focus == 'study' else 'success' if activity.focus == 'practice' else 'secondary' }}">
+                                        {{ activity.focus }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {% if plan.total_hours %}
+                <div class="alert alert-info mt-3">
+                    <i class="fas fa-clock me-2"></i>
+                    <strong>Total Study Time:</strong> {{ plan.total_hours }} hours
+                </div>
+                {% endif %}
+
+                {% if plan.tips %}
+                <div class="alert alert-warning mt-3">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    <strong>Study Tips:</strong>
+                    <ul class="mb-0 mt-2">
+                        {% for tip in plan.tips %}
+                        <li>{{ tip }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+                {% else %}
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    No study plan was generated. Please try a different query.
+                </div>
+                {% endif %}
+
+                {% if plan and plan.days %}
+                <form method="POST" action="/ai/study-plan/accept" class="mt-4">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="plan_data" value="{{ plan | tojson }}">
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="/ai/study-plan" class="btn btn-secondary">
+                            <i class="fas fa-rotate-left me-2"></i> Generate New Plan
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-check-double me-2"></i> Accept Plan & Create Tasks
+                        </button>
+                    </div>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
